@@ -30,8 +30,11 @@ start = pinn(t_input)
 for i in range(1000):
 
     with tf.GradientTape() as tape2:
+
         tape2.watch([pinn.trainable_variables, t_0])
+
         with tf.GradientTape() as tape1:
+
             tape1.watch([t_input])
             m = pinn(t_input)
     
