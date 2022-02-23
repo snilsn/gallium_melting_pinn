@@ -1,60 +1,42 @@
 import tensorflow as tf
 import tensorflow.keras as keras
-import matplotlib.pyplot as plt
 
-pinn = keras.Sequential([
-    keras.layers.Dense(10, input_shape = (1,)),
-    keras.layers.Dense(10, activation = 'tanh'),
-    keras.layers.Dense(10, activation = 'tanh'),
-    keras.layers.Dense(1, activation=None)
-])
+class pinn:
 
-pinn.compile(
-    optimizer = tf.keras.optimizers.Adam(), 
-    loss = tf.keras.losses.MeanSquaredError()
-)
+    def __init__(self, NN, t_0, t, M_0, l):
 
-t = tf.linspace(0, 5, 20)
-t_input = tf.transpose(tf.concat([[t]], axis = 0))
+        self.pinn = NN
+        self.variables = NN.trainable_variables
+        self.optimizer = NN.optimizer
+        self.t_0 = t_0
+        self.t = t
+        self.t_input = tf.transpose(tf.concat([[self.t]], axis = 0))
+        self.M_0 = M_0
+        self.l = l
 
-M_0 = 1.0
-l = 1.0
-t_0 = tf.constant([[0.0]])
+    def cast(self):
+        return self.pinn(self.t_input)
 
-def analytical(M_0, l, t):
-    return M_0*tf.exp(-l*t)
+    def train(self):
 
-optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001)
+        with tf.GradientTape() as tape2:
 
-start = pinn(t_input)
-for i in range(1000):
+            tape2.watch([self.variables, self.t_0])
 
-    with tf.GradientTape() as tape2:
+            with tf.GradientTape() as tape1:
 
-        tape2.watch([pinn.trainable_variables, t_0])
-
-        with tf.GradientTape() as tape1:
-
-            tape1.watch([t_input])
-            m = pinn(t_input)
+                tape1.watch([self.t_input])
+                m = self.cast()
     
-        dt = tf.cast(tape1.gradient(m, t_input), 'float32')
+            dt = tf.cast(tape1.gradient(m, self.t_input), 'float32')
 
-        f = dt + l*m
-        physical_loss = tf.reduce_mean(f**2)
+            self.f = dt + self.l*m
+            self.physical_loss = tf.reduce_mean(self.f**2)
 
-        m0 = pinn(t_0)
-        initial_loss = (m0-M_0)**2
+            m0 = self.pinn(self.t_0)
+            self.initial_loss = (m0-self.M_0)**2
 
-        loss = physical_loss + initial_loss
+            self.loss = self.physical_loss + self.initial_loss
 
-    grad = tape2.gradient(loss, pinn.trainable_variables)
-    optimizer.apply_gradients(zip(grad, pinn.trainable_variables))
-
-plt.plot(t_input, pinn(t_input), label = 'after training')
-
-plt.plot(t_input, start, label = 'initial guess')
-plt.plot(t_input, analytical(M_0, l, t_input), label = 'analytical solution')
-plt.legend()
-plt.grid()
-plt.show()
+        grad = tape2.gradient(self.loss, self.variables)
+        self.optimizer.apply_gradients(zip(grad, self.variables))
