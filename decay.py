@@ -9,7 +9,7 @@ def analytical(M_0, l, t):
 NN = keras.Sequential([
     keras.layers.Dense(10, input_shape = (1,)),
     keras.layers.Dense(10, activation = 'tanh'),
-    keras.layers.Dense(10, activation = 'tanh'),
+    keras.layers.Dense(10, activation = None),
     keras.layers.Dense(1, activation=None)
 ])
 
@@ -18,10 +18,10 @@ NN.compile(
     loss = tf.keras.losses.MeanSquaredError()
 )
 
-t = tf.linspace(0, 5, 20)
+t = tf.linspace(0, 50, 20)
 t_input = tf.transpose(tf.concat([[t]], axis = 0))
 
-M_0 = 1.0
+M_0 = 50.0
 l = 1.0
 t_0 = tf.constant([[0.0]])
 
@@ -29,7 +29,7 @@ pinn = pinns.pinn(NN, t_0, t, M_0, l)
 
 start = pinn.cast()
 
-for i in range(100):
+for i in range(10000):
     pinn.train()
 
 plt.plot(t_input, pinn.cast(), label = 'after training')
