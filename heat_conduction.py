@@ -5,27 +5,27 @@ import pinns as pn
 
 initializer = keras.initializers.RandomUniform(minval=-10, maxval=10)
 NN = keras.Sequential([
-    keras.layers.Dense(10, input_shape = (2,)),
-    keras.layers.Dense(100, activation = 'tanh'),
-    keras.layers.Dense(100, activation = 'tanh'),
-    keras.layers.Dense(100, activation = 'tanh'),
+    keras.layers.Dense(100, activation = 'selu', input_shape = (2,)),
+    keras.layers.Dense(100, activation = 'selu'),
+    keras.layers.Dense(100, activation = 'selu'),
+    keras.layers.Dense(100, activation = 'selu'),
     keras.layers.Dense(1, activation = None)
 ])
 
 lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
     boundaries = [6000, 9000], values = [0.1, 0.01, 0.001])
 
-optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
-#optimizer = tf.keras.optimizers.Adam(learning_rate = 0.1)
+#optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+optimizer = tf.keras.optimizers.Adam(learning_rate = 0.01)
 NN.compile(
     optimizer = optimizer,
     loss = tf.keras.losses.MeanSquaredError()
 )
 #number of samples to draw for each step, for boundary, initial and pde
-batch_size = 100
+batch_size = 10
 
 #simulation parameters
-t_max = 1#1200.0
+t_max = 0.0001#1200.0
 x_max = 1#3.81*0.01
 T_0 = 300
 T_L = 310
@@ -46,9 +46,16 @@ verify_input_L = pinn.sample_L(batch_size)
 verify_input_initial = pinn.sample_initial(batch_size)
 
 X_test, T_test = tf.meshgrid(x_test, t_test)
+x = tf.transpose(tf.concat([[T_test], [X_test]], axis=0))
+pinn.pinn.fit(
+    x = x,
+    y = tf.ones(len(x))*300.0,
+    epochs = 100,
+    batch_size = 100
+)
 
 #training loop
-for i in range(10001):
+for i in range(5001):
 
     #creating training input:
     x_input = pinn.sample_x(batch_size)

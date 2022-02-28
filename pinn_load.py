@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 pinn = keras.models.load_model('pinn')
 
 t_min = 0.0
-t_max = 1
+t_max = 0.0001
 x_min = 0.0
 x_max = 1
 #test_input = tf.transpose(tf.concat([[tf.ones(50)*t_max/10*10], [tf.linspace(x_min, x_max, 50)]], axis=0))

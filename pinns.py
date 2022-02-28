@@ -1,6 +1,40 @@
 import tensorflow as tf
 import tensorflow.keras as keras
 
+class pinn_0d:
+
+    def __init__(self, NN, t_max, t_0):
+
+        self.pinn = NN
+        self.variables = NN.trainable_variables
+        self.optimizer = NN.optimizer
+        self.t_max = t_max
+        self.t_0 = t_0
+
+    def sample_t(self, batch_size):
+
+        t_data = tf.random.uniform(
+        [batch_size], minval=0.0, maxval=self.t_max, dtype=tf.dtypes.float32
+        )
+        return t_data
+
+    def sample_initial(self, batch_size):
+
+        t = tf.ones(batch_size)*self.t_0
+        return tf.transpose(tf.concat([[t]], axis=0))
+        
+    def sample_input(self, batch_size):
+        t = self.sample_t(batch_size)
+        pinn_input = tf.transpose(tf.concat([[t]], axis=0))
+        return pinn_input
+
+    def cast(self, input_data):
+        output = self.pinn(input_data)
+        return output
+
+    def save(self, name):
+        self.pinn.save(name)
+
 class pinn_1d:
 
     def __init__(self, NN, t_max, x_max, y_L , y_R):
@@ -65,8 +99,8 @@ class pinn_1d:
         return input_L
 
     def sample_input(self, batch_size):
-        x = sample_x(batch_size)
-        t = sample_t(batch_size)
+        x = self.sample_x(batch_size)
+        t = self.sample_t(batch_size)
         pinn_input = tf.transpose(tf.concat([[t], [x]], axis=0))
         return pinn_input
 
